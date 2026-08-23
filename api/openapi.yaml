@@ -1,0 +1,20 @@
+openapi: 3.0.3
+info:
+  title: Privacy Transform Service
+  version: 1.0.0
+paths:
+  /healthz: {get: {responses: {'200': {description: healthy}}}}
+  /readyz: {get: {responses: {'200': {description: ready}}}}
+  /metrics: {get: {responses: {'200': {description: metrics}}}}
+  /v1/privacy/classifications: {get: {summary: List classifications, responses: {'200': {description: classifications}}}, post: {summary: Create classification, responses: {'201': {description: classification created}, '400': {description: invalid classification}}}}
+  /v1/privacy/policies: {post: {summary: Save policy draft, responses: {'201': {description: draft saved}, '400': {description: invalid policy}}}}
+  /v1/privacy/policies/publish: {post: {summary: Publish policy, responses: {'200': {description: policy published}, '404': {description: policy not found}}}}
+  /v1/privacy/transform: {post: {summary: Transform one JSON record, responses: {'200': {description: transformed record}, '400': {description: invalid record}}}}
+  /v1/privacy/batch: {post: {summary: Transform records, responses: {'200': {description: batch results}}}}
+  /v1/privacy/tokens/revoke: {post: {summary: Revoke token, responses: {'200': {description: token revoked}, '404': {description: token not found}}}}
+  /v1/privacy/workspaces: {post: {summary: Create policy workspace, responses: {'201': {description: workspace created}}}}
+  /v1/privacy/purposes: {get: {summary: List processing purposes, responses: {'200': {description: purposes}}}, post: {summary: Create processing purpose, responses: {'201': {description: purpose created}}}}
+  /v1/privacy/rule-sets: {get: {summary: List transform rule sets, responses: {'200': {description: rule sets}}}, post: {summary: Create transform rule set, responses: {'201': {description: rule set created}}}}
+  /v1/privacy/policies/rollback: {post: {summary: Roll back policy, responses: {'200': {description: policy rolled back}}}}
+  /v1/privacy/policies/simulate: {post: {summary: Simulate policy, responses: {'200': {description: simulation result}}}}
+  /v1/privacy/results: {get: {summary: List processing results, responses: {'200': {description: result summaries}}}}
