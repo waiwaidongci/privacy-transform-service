@@ -34,13 +34,13 @@ func (c *TTL) Get(_ context.Context, key string) (*domain.TransformRevision, boo
 		}
 		return nil, false
 	}
-	v := e.revision
+	v := e.revision.Clone()
 	return &v, true
 }
 func (c *TTL) Set(_ context.Context, key string, v domain.TransformRevision) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.data[key] = entry{revision: v, expires: time.Now().Add(c.ttl)}
+	c.data[key] = entry{revision: v.Clone(), expires: time.Now().Add(c.ttl)}
 }
 func (c *TTL) Delete(_ context.Context, key string) {
 	c.mu.Lock()

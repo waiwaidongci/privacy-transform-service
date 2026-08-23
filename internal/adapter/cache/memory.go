@@ -20,12 +20,13 @@ func (m *Memory) Get(_ context.Context, k string) (*domain.TransformRevision, bo
 	if !ok {
 		return nil, false
 	}
-	return &v, true
+	c := v.Clone()
+	return &c, true
 }
 func (m *Memory) Set(_ context.Context, k string, v domain.TransformRevision) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.data[k] = v
+	m.data[k] = v.Clone()
 }
 func (m *Memory) Delete(_ context.Context, k string) {
 	m.mu.Lock()

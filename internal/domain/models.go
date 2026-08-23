@@ -120,3 +120,69 @@ func (v *TransformRevision) Validate(t ValueType) error {
 	}
 	return ValidateValue(t, v.Value)
 }
+
+// Clone returns a deep copy of the revision so that callers cannot mutate the
+// cached value through shared slice/map/pointer references. It mirrors the
+// shape of TransformRevision and Rule, copying every slice, map and pointer
+// field rather than copying just the headers.
+func (v TransformRevision) Clone() TransformRevision {
+	out := v
+	out.Rules = cloneRules(v.Rules)
+	out.Value = cloneAny(v.Value)
+	if v.PublishedAt != nil {
+		p := *v.PublishedAt
+		out.PublishedAt = &p
+	}
+	return out
+}
+
+func cloneRules(in []Rule) []Rule {
+	if in == nil {
+		return nil
+	}
+	out := make([]Rule, len(in))
+	for i, r := range in {
+		out[i] = r
+		out[i].Tags = cloneStringMap(r.Tags)
+		if r.Percentage != nil {
+			p := *r.Percentage
+			out[i].Percentage = &p
+		}
+		if r.StartAt != nil {
+			t := *r.StartAt
+			out[i].StartAt = &t
+		}
+		if r.EndAt != nil {
+			t := *r.EndAt
+			out[i].EndAt = &t
+		}
+		out[i].Value = cloneAny(r.Value)
+	}
+	return out
+}
+
+func cloneStringMap(in map[string]string) map[string]string {
+	if in == nil {
+		return nil
+	}
+	out := make(map[string]string, len(in))
+	for k, v := range in {
+		out[k] = v
+	}
+	return out
+}
+
+func cloneAny(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		return DeepCopyJSON(x)
+	case []any:
+		o := make([]any, len(x))
+		for i, e := range x {
+			o[i] = cloneAny(e)
+		}
+		return o
+	default:
+		return v
+	}
+}
