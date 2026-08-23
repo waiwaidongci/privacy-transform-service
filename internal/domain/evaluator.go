@@ -16,23 +16,43 @@ type EvaluationContext struct {
 }
 
 func Evaluate(ruleSet TransformRuleSet, revision *TransformRevision, ctx EvaluationContext) (any, int, error) {
-	value := ruleSet.DefaultValue
+	value := cloneJSONValue(ruleSet.DefaultValue)
 	rules := ruleSet.Rules
 	revisionNo := ruleSet.ActiveTransformRevision
 	if revision != nil {
-		value, rules, revisionNo = revision.Value, revision.Rules, revision.Number
+		value, rules, revisionNo = cloneJSONValue(revision.Value), revision.Rules, revision.Number
 	}
 	if ctx.Now.IsZero() {
 		ctx.Now = time.Now()
 	}
-	sort.SliceStable(rules, func(i, j int) bool { return rules[i].Priority < rules[j].Priority })
-	for _, rule := range rules {
+	sorted := make([]Rule, len(rules))
+	copy(sorted, rules)
+	sort.SliceStable(sorted, func(i, j int) bool { return sorted[i].Priority < sorted[j].Priority })
+	for _, rule := range sorted {
 		if !matchesTags(rule.Tags, ctx.Tags) || !matchesTime(rule, ctx.Now) || !matchesPercentage(rule.Percentage, ctx.SubjectID) {
 			continue
 		}
-		return rule.Value, revisionNo, nil
+		return cloneJSONValue(rule.Value), revisionNo, nil
 	}
 	return value, revisionNo, nil
+}
+
+// cloneJSONValue returns a deep copy of v for the JSON-like container types
+// (map/slice) so callers cannot mutate the stored input through the returned
+// reference. Scalar values are returned as-is since they are immutable in Go.
+func cloneJSONValue(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		return DeepCopyJSON(x)
+	case []any:
+		o := make([]any, len(x))
+		for i, v := range x {
+			o[i] = cloneJSONValue(v)
+		}
+		return o
+	default:
+		return x
+	}
 }
 
 func matchesTags(expected, actual map[string]string) bool {
