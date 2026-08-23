@@ -4,13 +4,14 @@ package application
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/ali/go-0821/privacy-transform-service/internal/domain"
 )
 
 func (s *Service) ImportPolicyWorkspace(ctx context.Context, data []byte) error {
 	var in Export
 	if err := json.Unmarshal(data, &in); err != nil {
-		return err
+		return fmt.Errorf("%w: invalid workspace JSON: %w", domain.ErrInvalid, err)
 	}
 	if err := s.CreatePolicyWorkspace(ctx, in.PolicyWorkspace); err != nil {
 		return err
@@ -29,6 +30,8 @@ func (s *Service) ImportPolicyWorkspace(ctx context.Context, data []byte) error 
 }
 func DecodeTransformRuleSet(data []byte) (domain.TransformRuleSet, error) {
 	var f domain.TransformRuleSet
-	err := json.Unmarshal(data, &f)
-	return f, err
+	if err := json.Unmarshal(data, &f); err != nil {
+		return f, fmt.Errorf("%w: invalid rule set JSON: %w", domain.ErrInvalid, err)
+	}
+	return f, nil
 }
