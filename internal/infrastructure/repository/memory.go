@@ -25,7 +25,9 @@ func (m *Memory) CreatePolicyWorkspace(_ context.Context, p domain.PolicyWorkspa
 	if _, ok := m.workspaces[p.ID]; ok {
 		return domain.ErrConflict
 	}
-	m.workspaces[p.ID] = p
+	// Store an independent copy so later mutation of the caller's value
+	// cannot leak into the repository.
+	m.workspaces[p.ID] = clonePolicyWorkspace(p)
 	return nil
 }
 func (m *Memory) GetPolicyWorkspace(_ context.Context, id string) (domain.PolicyWorkspace, error) {
@@ -35,7 +37,8 @@ func (m *Memory) GetPolicyWorkspace(_ context.Context, id string) (domain.Policy
 	if !ok {
 		return domain.PolicyWorkspace{}, domain.ErrNotFound
 	}
-	return p, nil
+	// Return a copy so the caller cannot mutate the stored value.
+	return clonePolicyWorkspace(p), nil
 }
 func (m *Memory) CreateProcessingPurpose(_ context.Context, e domain.ProcessingPurpose) error {
 	m.mu.Lock()
@@ -43,17 +46,17 @@ func (m *Memory) CreateProcessingPurpose(_ context.Context, e domain.ProcessingP
 	if _, ok := m.envs[e.ID]; ok {
 		return domain.ErrConflict
 	}
-	e2 := e
-	m.envs[e.ID] = e2
+	m.envs[e.ID] = cloneProcessingPurpose(e)
 	return nil
 }
 func (m *Memory) ListProcessingPurposes(_ context.Context, p string) ([]domain.ProcessingPurpose, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	out := []domain.ProcessingPurpose{}
+	out := make([]domain.ProcessingPurpose, 0)
 	for _, e := range m.envs {
 		if e.PolicyWorkspaceID == p {
-			out = append(out, e)
+			// Append a copy so the caller cannot mutate the stored value.
+			out = append(out, cloneProcessingPurpose(e))
 		}
 	}
 	return out, nil
@@ -64,7 +67,9 @@ func (m *Memory) CreateTransformRuleSet(_ context.Context, f domain.TransformRul
 	if old, ok := m.ruleSets[f.ID]; ok {
 		f.CreatedAt = old.CreatedAt
 	}
-	m.ruleSets[f.ID] = f
+	// Store a deep copy so later mutation of the caller's Rules slice or
+	// DefaultValue cannot leak into the repository.
+	m.ruleSets[f.ID] = cloneTransformRuleSet(f)
 	return nil
 }
 func (m *Memory) GetTransformRuleSet(_ context.Context, id string) (domain.TransformRuleSet, error) {
@@ -74,15 +79,19 @@ func (m *Memory) GetTransformRuleSet(_ context.Context, id string) (domain.Trans
 	if !ok {
 		return domain.TransformRuleSet{}, domain.ErrNotFound
 	}
-	return f, nil
+	// Return a deep copy so the caller cannot mutate the stored Rules slice
+	// or DefaultValue.
+	return cloneTransformRuleSet(f), nil
 }
 func (m *Memory) ListTransformRuleSets(_ context.Context, p, e string) ([]domain.TransformRuleSet, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	out := []domain.TransformRuleSet{}
+	out := make([]domain.TransformRuleSet, 0)
 	for _, f := range m.ruleSets {
 		if f.PolicyWorkspaceID == p && (e == "" || f.ProcessingPurposeID == e) {
-			out = append(out, f)
+			// Append a deep copy so the caller cannot mutate the stored
+			// Rules slices or DefaultValue values.
+			out = append(out, cloneTransformRuleSet(f))
 		}
 	}
 	return out, nil
@@ -90,15 +99,18 @@ func (m *Memory) ListTransformRuleSets(_ context.Context, p, e string) ([]domain
 func (m *Memory) SaveTransformRevision(_ context.Context, v domain.TransformRevision) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	// Store a deep copy so later mutation of the caller's Rules slice or
+	// Value cannot leak into the repository.
+	stored := cloneTransformRevision(v)
 	arr := m.revisions[v.TransformRuleSetID]
 	for i, x := range arr {
 		if x.Number == v.Number {
-			arr[i] = v
+			arr[i] = stored
 			m.revisions[v.TransformRuleSetID] = arr
 			return nil
 		}
 	}
-	m.revisions[v.TransformRuleSetID] = append(arr, v)
+	m.revisions[v.TransformRuleSetID] = append(arr, stored)
 	return nil
 }
 func (m *Memory) GetTransformRevision(_ context.Context, id string, n int) (domain.TransformRevision, error) {
@@ -106,7 +118,9 @@ func (m *Memory) GetTransformRevision(_ context.Context, id string, n int) (doma
 	defer m.mu.RUnlock()
 	for _, v := range m.revisions[id] {
 		if v.Number == n {
-			return v, nil
+			// Return a deep copy so the caller cannot mutate the stored
+			// Rules slice or Value.
+			return cloneTransformRevision(v), nil
 		}
 	}
 	return domain.TransformRevision{}, domain.ErrNotFound
@@ -114,16 +128,32 @@ func (m *Memory) GetTransformRevision(_ context.Context, id string, n int) (doma
 func (m *Memory) ListTransformRevisions(_ context.Context, id string) ([]domain.TransformRevision, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return append([]domain.TransformRevision(nil), m.revisions[id]...), nil
+	src := m.revisions[id]
+	// Allocate a fresh slice and deep copy each entry so the caller cannot
+	// mutate the stored revisions' Rules slices or Values.
+	out := make([]domain.TransformRevision, len(src))
+	for i, v := range src {
+		out[i] = cloneTransformRevision(v)
+	}
+	return out, nil
 }
 func (m *Memory) SavePolicyPublication(_ context.Context, r domain.PolicyPublication) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.publications[r.TransformRuleSetID] = append(m.publications[r.TransformRuleSetID], r)
+	// Store a copy so later mutation of the caller's value cannot leak
+	// into the repository.
+	m.publications[r.TransformRuleSetID] = append(m.publications[r.TransformRuleSetID], clonePolicyPublication(r))
 	return nil
 }
 func (m *Memory) ListPolicyPublications(_ context.Context, id string) ([]domain.PolicyPublication, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	return append([]domain.PolicyPublication(nil), m.publications[id]...), nil
+	src := m.publications[id]
+	// Allocate a fresh slice and copy each entry so the caller cannot
+	// mutate the stored publications.
+	out := make([]domain.PolicyPublication, len(src))
+	for i, r := range src {
+		out[i] = clonePolicyPublication(r)
+	}
+	return out, nil
 }

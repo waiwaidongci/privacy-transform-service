@@ -20,12 +20,17 @@ func (m *Memory) Get(_ context.Context, k string) (*domain.TransformRevision, bo
 	if !ok {
 		return nil, false
 	}
-	return &v, true
+	// Return a deep copy so the caller cannot mutate the cached revision's
+	// Rules slice or Value.
+	out := domain.CopyTransformRevision(v)
+	return &out, true
 }
 func (m *Memory) Set(_ context.Context, k string, v domain.TransformRevision) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.data[k] = v
+	// Store a deep copy so later mutation of the caller's Rules slice or
+	// Value cannot leak into the cache.
+	m.data[k] = domain.CopyTransformRevision(v)
 }
 func (m *Memory) Delete(_ context.Context, k string) {
 	m.mu.Lock()

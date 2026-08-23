@@ -34,13 +34,17 @@ func (c *TTL) Get(_ context.Context, key string) (*domain.TransformRevision, boo
 		}
 		return nil, false
 	}
-	v := e.revision
+	// Return a deep copy so the caller cannot mutate the cached revision's
+	// Rules slice or Value.
+	v := domain.CopyTransformRevision(e.revision)
 	return &v, true
 }
 func (c *TTL) Set(_ context.Context, key string, v domain.TransformRevision) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.data[key] = entry{revision: v, expires: time.Now().Add(c.ttl)}
+	// Store a deep copy so later mutation of the caller's Rules slice or
+	// Value cannot leak into the cache.
+	c.data[key] = entry{revision: domain.CopyTransformRevision(v), expires: time.Now().Add(c.ttl)}
 }
 func (c *TTL) Delete(_ context.Context, key string) {
 	c.mu.Lock()
