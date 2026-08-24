@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS privacy_transform_results; DROP TABLE IF EXISTS privacy_transform_requests; DROP TABLE IF EXISTS privacy_token_metadata; DROP TABLE IF EXISTS privacy_policies; DROP TABLE IF EXISTS privacy_classifications;
