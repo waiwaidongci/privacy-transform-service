@@ -1,0 +1,10 @@
+services:
+  privacy-transform:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    ports:
+      - "8083:8083"
+    environment:
+      PRIVACY_TRANSFORM_HTTP_ADDR: ":8083"
+      PRIVACY_TRANSFORM_ENVIRONMENT: docker
