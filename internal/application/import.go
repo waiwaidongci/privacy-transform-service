@@ -11,19 +11,19 @@ import (
 func (s *Service) ImportPolicyWorkspace(ctx context.Context, data []byte) error {
 	var in Export
 	if err := json.Unmarshal(data, &in); err != nil {
-		return fmt.Errorf("%v: invalid import payload", domain.ErrInvalid)
+		return fmt.Errorf("%w: invalid import payload", domain.ErrInvalid)
 	}
 	if err := s.CreatePolicyWorkspace(ctx, in.PolicyWorkspace); err != nil {
-		return fmt.Errorf("create workspace: %v", err)
+		return fmt.Errorf("create workspace: %w", err)
 	}
 	for _, e := range in.ProcessingPurposes {
 		if err := s.CreateProcessingPurpose(ctx, e); err != nil {
-			return fmt.Errorf("create purpose: %v", err)
+			return fmt.Errorf("create purpose: %w", err)
 		}
 	}
 	for _, f := range in.TransformRuleSets {
 		if err := s.CreateTransformRuleSet(ctx, f); err != nil {
-			return fmt.Errorf("create ruleset: %v", err)
+			return fmt.Errorf("create ruleset: %w", err)
 		}
 	}
 	return nil

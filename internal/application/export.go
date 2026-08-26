@@ -17,7 +17,7 @@ type Export struct {
 func (s *Service) ExportPolicyWorkspace(ctx context.Context, id string) (Export, error) {
 	p, e := s.store.GetPolicyWorkspace(ctx, id)
 	if e != nil {
-		return Export{}, fmt.Errorf("export workspace %s: %v", id, e)
+		return Export{}, fmt.Errorf("export workspace %s: %w", id, e)
 	}
 	envs, _ := s.store.ListProcessingPurposes(ctx, id)
 	ruleSets := []domain.TransformRuleSet{}
@@ -30,7 +30,7 @@ func (s *Service) ExportPolicyWorkspace(ctx context.Context, id string) (Export,
 func (s *Service) ExportJSON(ctx context.Context, id string) ([]byte, error) {
 	v, e := s.ExportPolicyWorkspace(ctx, id)
 	if e != nil {
-		return nil, fmt.Errorf("export json %s: %v", id, e)
+		return nil, fmt.Errorf("export json %s: %w", id, e)
 	}
 	return json.MarshalIndent(v, "", "  ")
 }
