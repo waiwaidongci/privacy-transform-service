@@ -1,0 +1,14 @@
+{
+  "project_intro": "基于 Go 实现的企业级隐私数据脱敏与策略执行服务 Web 项目，一款后端服务，完成策略发布、字段级脱敏转换与令牌管理。",
+  "mode": "service",
+  "start": "go run ./cmd/privacy-transform-service",
+  "workdir": ".",
+  "env": {
+    "PRIVACY_TRANSFORM_HTTP_ADDR": ":8083"
+  },
+  "ready_url": "http://127.0.0.1:8083/readyz",
+  "ready_status": [
+    200
+  ],
+  "startup_timeout": 20
+}
