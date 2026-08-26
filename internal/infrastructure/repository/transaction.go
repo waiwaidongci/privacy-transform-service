@@ -15,11 +15,15 @@ type Transaction struct {
 
 func NewTransaction() *Transaction { return &Transaction{undo: []func(){}} }
 func (t *Transaction) AddUndo(fn func()) {
-	if !t.closed {
-		t.undo = append(t.undo, fn)
+	if t == nil || t.closed {
+		return
 	}
+	t.undo = append(t.undo, fn)
 }
 func (t *Transaction) Commit() error {
+	if t == nil {
+		return ErrTransactionClosed
+	}
 	if t.closed {
 		return ErrTransactionClosed
 	}
@@ -28,6 +32,9 @@ func (t *Transaction) Commit() error {
 	return nil
 }
 func (t *Transaction) Rollback() error {
+	if t == nil {
+		return ErrTransactionClosed
+	}
 	if t.closed {
 		return ErrTransactionClosed
 	}

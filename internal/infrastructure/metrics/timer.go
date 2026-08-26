@@ -14,6 +14,9 @@ type Timer struct {
 }
 
 func (t *Timer) Observe(d time.Duration) {
+	if t == nil {
+		return
+	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	t.count++
@@ -23,6 +26,9 @@ func (t *Timer) Observe(d time.Duration) {
 	}
 }
 func (t *Timer) Snapshot() (uint64, time.Duration, time.Duration) {
+	if t == nil {
+		return 0, 0, 0
+	}
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	return t.count, t.total, t.max

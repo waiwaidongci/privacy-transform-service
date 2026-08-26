@@ -14,6 +14,9 @@ type Registry struct {
 
 func NewRegistry() *Registry { return &Registry{counters: map[string]*uint64{}} }
 func (r *Registry) Counter(name string) *uint64 {
+	if r == nil {
+		return new(uint64)
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if c, ok := r.counters[name]; ok {
@@ -23,8 +26,16 @@ func (r *Registry) Counter(name string) *uint64 {
 	r.counters[name] = &v
 	return &v
 }
-func (r *Registry) Inc(name string) { atomic.AddUint64(r.Counter(name), 1) }
+func (r *Registry) Inc(name string) {
+	if r == nil {
+		return
+	}
+	atomic.AddUint64(r.Counter(name), 1)
+}
 func (r *Registry) Text() string {
+	if r == nil {
+		return ""
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	out := ""
