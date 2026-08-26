@@ -24,7 +24,7 @@ func (s *Service) CreatePolicyWorkspace(ctx context.Context, p domain.PolicyWork
 		p.CreatedAt = s.now()
 	}
 	if p.ID == "" || p.Name == "" {
-		return fmt.Errorf("%v: workspace id/name required", domain.ErrInvalid)
+		return fmt.Errorf("%w: workspace id/name required", domain.ErrInvalid)
 	}
 	return s.store.CreatePolicyWorkspace(ctx, p)
 }
@@ -64,7 +64,7 @@ func (s *Service) ListProcessingPurposes(ctx context.Context, p string) ([]domai
 func (s *Service) CreateTransformRevision(ctx context.Context, ruleSetID string, v domain.TransformRevision) (domain.TransformRevision, error) {
 	f, err := s.store.GetTransformRuleSet(ctx, ruleSetID)
 	if err != nil {
-		return v, fmt.Errorf("load ruleset %s: %v", ruleSetID, err)
+		return v, fmt.Errorf("load ruleset %s: %w", ruleSetID, err)
 	}
 	revisions, _ := s.store.ListTransformRevisions(ctx, ruleSetID)
 	v.TransformRuleSetID = ruleSetID
@@ -89,11 +89,11 @@ func (s *Service) ListTransformRevisions(ctx context.Context, id string) ([]doma
 func (s *Service) PolicyPublication(ctx context.Context, ruleSetID string, revision int, envID, reason string) (domain.PolicyPublication, error) {
 	f, err := s.store.GetTransformRuleSet(ctx, ruleSetID)
 	if err != nil {
-		return domain.PolicyPublication{}, fmt.Errorf("load ruleset %s: %v", ruleSetID, err)
+		return domain.PolicyPublication{}, fmt.Errorf("load ruleset %s: %w", ruleSetID, err)
 	}
 	v, err := s.store.GetTransformRevision(ctx, ruleSetID, revision)
 	if err != nil {
-		return domain.PolicyPublication{}, fmt.Errorf("load revision %s/%d: %v", ruleSetID, revision, err)
+		return domain.PolicyPublication{}, fmt.Errorf("load revision %s/%d: %w", ruleSetID, revision, err)
 	}
 	if v.Status == "revoked" {
 		return domain.PolicyPublication{}, fmt.Errorf("%w: revision revoked", domain.ErrConflict)
@@ -135,7 +135,7 @@ type ValueResult struct {
 func (s *Service) Evaluate(ctx context.Context, ruleSetID string, ec domain.EvaluationContext) (ValueResult, error) {
 	f, err := s.store.GetTransformRuleSet(ctx, ruleSetID)
 	if err != nil {
-		return ValueResult{}, fmt.Errorf("load ruleset %s: %v", ruleSetID, err)
+			return ValueResult{}, fmt.Errorf("load ruleset %s: %w", ruleSetID, err)
 	}
 	var v *domain.TransformRevision
 	if f.ActiveTransformRevision > 0 {

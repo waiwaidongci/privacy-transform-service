@@ -5,6 +5,7 @@ package httpadapter
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/ali/go-0821/privacy-transform-service/internal/application"
 	"github.com/ali/go-0821/privacy-transform-service/internal/domain"
@@ -12,7 +13,6 @@ import (
 	"github.com/ali/go-0821/privacy-transform-service/internal/infrastructure/metrics"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -87,11 +87,11 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 }
 func writeErr(w http.ResponseWriter, err error) {
 	status := 500
-	if strings.Contains(err.Error(), domain.ErrNotFound.Error()) {
+	if errors.Is(err, domain.ErrNotFound) {
 		status = 404
-	} else if strings.Contains(err.Error(), domain.ErrConflict.Error()) {
+	} else if errors.Is(err, domain.ErrConflict) {
 		status = 409
-	} else if strings.Contains(err.Error(), domain.ErrInvalid.Error()) {
+	} else if errors.Is(err, domain.ErrInvalid) {
 		status = 400
 	}
 	writeJSON(w, status, map[string]string{"error": err.Error()})

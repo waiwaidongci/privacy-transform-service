@@ -34,7 +34,7 @@ func (m *Memory) GetPolicyWorkspace(_ context.Context, id string) (domain.Policy
 	defer m.mu.RUnlock()
 	p, ok := m.workspaces[id]
 	if !ok {
-		return domain.PolicyWorkspace{}, fmt.Errorf("get workspace %s: %v", id, domain.ErrNotFound)
+		return domain.PolicyWorkspace{}, fmt.Errorf("get workspace %s: %w", id, domain.ErrNotFound)
 	}
 	return p, nil
 }
@@ -73,7 +73,7 @@ func (m *Memory) GetTransformRuleSet(_ context.Context, id string) (domain.Trans
 	defer m.mu.RUnlock()
 	f, ok := m.ruleSets[id]
 	if !ok {
-		return domain.TransformRuleSet{}, fmt.Errorf("get ruleset %s: %v", id, domain.ErrNotFound)
+		return domain.TransformRuleSet{}, fmt.Errorf("get ruleset %s: %w", id, domain.ErrNotFound)
 	}
 	return f, nil
 }
@@ -110,7 +110,7 @@ func (m *Memory) GetTransformRevision(_ context.Context, id string, n int) (doma
 			return v, nil
 		}
 	}
-	return domain.TransformRevision{}, fmt.Errorf("get revision %s: %v", id, domain.ErrNotFound)
+	return domain.TransformRevision{}, fmt.Errorf("get revision %s: %w", id, domain.ErrNotFound)
 }
 func (m *Memory) ListTransformRevisions(_ context.Context, id string) ([]domain.TransformRevision, error) {
 	m.mu.RLock()
