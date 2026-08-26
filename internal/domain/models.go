@@ -82,24 +82,24 @@ func ValidateValue(t ValueType, value any) error {
 	switch t {
 	case TypeBool:
 		if _, ok := value.(bool); !ok {
-			return fmt.Errorf("%v: expected boolean", ErrInvalid)
+			return fmt.Errorf("%w: expected boolean", ErrInvalid)
 		}
 	case TypeString:
 		if _, ok := value.(string); !ok {
-			return fmt.Errorf("%v: expected string", ErrInvalid)
+			return fmt.Errorf("%w: expected string", ErrInvalid)
 		}
 	case TypeInt:
 		switch value.(type) {
 		case int, int64, float64, float32:
 		default:
-			return fmt.Errorf("%v: expected integer", ErrInvalid)
+			return fmt.Errorf("%w: expected integer", ErrInvalid)
 		}
 	case TypeJSON:
 		if value == nil {
-			return fmt.Errorf("%v: JSON value cannot be nil", ErrInvalid)
+			return fmt.Errorf("%w: JSON value cannot be nil", ErrInvalid)
 		}
 	default:
-		return fmt.Errorf("%v: unsupported value type %q", ErrInvalid, t)
+		return fmt.Errorf("%w: unsupported value type %q", ErrInvalid, t)
 	}
 	return nil
 }

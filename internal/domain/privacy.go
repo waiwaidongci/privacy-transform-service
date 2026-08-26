@@ -50,12 +50,12 @@ var pathPart = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
 
 func ValidateRule(r FieldRule) error {
 	if r.Path == "" || (!pathPart.MatchString(r.Path) && !strings.Contains(r.Path, "[")) {
-		return fmt.Errorf("%v: invalid field path", ErrInvalid)
+		return fmt.Errorf("%w: invalid field path", ErrInvalid)
 	}
 	switch r.Action {
 	case "mask", "hash", "tokenize", "truncate", "generalize", "delete":
 	default:
-		return fmt.Errorf("%v: unsupported action", ErrInvalid)
+		return fmt.Errorf("%w: unsupported action", ErrInvalid)
 	}
 	return nil
 }
