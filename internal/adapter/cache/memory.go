@@ -14,6 +14,9 @@ type Memory struct {
 
 func NewMemory() *Memory { return &Memory{data: map[string]domain.TransformRevision{}} }
 func (m *Memory) Get(_ context.Context, k string) (*domain.TransformRevision, bool) {
+	if m == nil {
+		return nil, false
+	}
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	v, ok := m.data[k]
@@ -23,11 +26,17 @@ func (m *Memory) Get(_ context.Context, k string) (*domain.TransformRevision, bo
 	return &v, true
 }
 func (m *Memory) Set(_ context.Context, k string, v domain.TransformRevision) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.data[k] = v
 }
 func (m *Memory) Delete(_ context.Context, k string) {
+	if m == nil {
+		return
+	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.data, k)

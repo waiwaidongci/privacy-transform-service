@@ -25,6 +25,9 @@ func NewTTL(ttl time.Duration) *TTL {
 	return &TTL{data: map[string]entry{}, ttl: ttl}
 }
 func (c *TTL) Get(_ context.Context, key string) (*domain.TransformRevision, bool) {
+	if c == nil {
+		return nil, false
+	}
 	c.mu.RLock()
 	e, ok := c.data[key]
 	c.mu.RUnlock()
@@ -38,13 +41,26 @@ func (c *TTL) Get(_ context.Context, key string) (*domain.TransformRevision, boo
 	return &v, true
 }
 func (c *TTL) Set(_ context.Context, key string, v domain.TransformRevision) {
+	if c == nil {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.data[key] = entry{revision: v, expires: time.Now().Add(c.ttl)}
 }
 func (c *TTL) Delete(_ context.Context, key string) {
+	if c == nil {
+		return
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	delete(c.data, key)
 }
-func (c *TTL) Size() int { c.mu.RLock(); defer c.mu.RUnlock(); return len(c.data) }
+func (c *TTL) Size() int {
+	if c == nil {
+		return 0
+	}
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	return len(c.data)
+}
